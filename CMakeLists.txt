@@ -23,11 +23,11 @@ if (BUILD_TESTS)
         )
 
     add_executable(client-testsuite ${client_testsuite_SRCS})
-    target_link_libraries(client-testsuite libmatrixx-client)
+    target_link_libraries(client-testsuite matrixx-client)
 endif (BUILD_TESTS)
 
 # Tweak general compiler flags here
-set(CMAKE_CXX_STANDARD 11)
+target_compile_features (client-testsuite PRIVATE cxx_auto_type)
 if ( CMAKE_COMPILER_IS_GNUCC )
-    target_compile_options( client-testsuite PRIVATE "-Wall -Wextra -pedantic" )
+    target_compile_options( client-testsuite PRIVATE -Wall -Wextra -pedantic )
 endif ( CMAKE_COMPILER_IS_GNUCC )
