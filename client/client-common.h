@@ -21,5 +21,38 @@
 
 namespace mtrx {
 
+/**
+ * @brief Transport protocol encapsulation
+ *
+ * So far, it's HTTP/1.1 - but WebSockets etc. are likely to arrive one day.
+ */
+namespace transport {
+
+/**
+ * @brief A server connection line and settings.
+ */
+class Server {
+
+};
+
+/**
+ * @brief A session with the server.
+ *
+ * Identified by access_token.
+ */
+class ServerSession {
+
+};
+
+}
+
+/**
+ * @brief Data storage encapsulation.
+ *
+ * User information, the list of servers, caches etc. are encapsulated here.
+ */
+namespace storage {
+
+}
 
 }

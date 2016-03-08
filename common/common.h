@@ -52,7 +52,19 @@ namespace Error {
  *
  *
  */
-namespace types {
+namespace data {
+
+struct event {
+
+};
+
+struct user {
+
+};
+
+struct room {
+
+};
 
 }
 
@@ -63,14 +75,9 @@ namespace types {
  */
 namespace format {
 
-}
+struct JSONDocument {
 
-/**
- * @brief Transport protocol encapsulation
- *
- * So far, it's HTTP/1.1 - but WebSockets etc. are likely to arrive one day.
- */
-namespace transport {
+};
 
 }
 
