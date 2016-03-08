@@ -1,0 +1,6 @@
+[submodule "deps/rapidjson"]
+	path = deps/rapidjson
+	url = https://github.com/miloyip/rapidjson.git
+[submodule "deps/boost/asio"]
+	path = deps/boost/asio
+	url = https://github.com/boostorg/asio.git
