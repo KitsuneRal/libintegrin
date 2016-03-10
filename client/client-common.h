@@ -38,7 +38,7 @@ class Server {
 /**
  * @brief A session with the server.
  *
- * Identified by access_token.
+ * Encapsulation of access_token.
  */
 class ServerSession {
 

@@ -34,11 +34,74 @@ public:
 private:
     time_t _t;
 
-    friend std::ostream & operator<<(std::ostream & os, const my_put_time & tp)
-    {
+    friend std::ostream & operator<<(std::ostream & os,
+                                     const my_put_time & tp) {
         return os << std::ctime(&tp._t); // Not thread safe
     }
 };
+
+namespace scope_guard
+{
+using namespace std;
+
+class scope_base {
+public:
+    scope_base(ostream & os = cout)
+        : _os(os)
+        , _good_exit(false)
+    { }
+    bool good_exit() { return _good_exit; }
+    void set_good_exit(bool new_value = true) { _good_exit = new_value; }
+    ~scope_base() {
+    }
+
+protected:
+    ostream & _os;
+
+private:
+    bool _good_exit;
+};
+
+class named : virtual public scope_base {
+public:
+    named(const string & scope_name) : _name(scope_name) { }
+    const string & name() const { return _name; }
+private:
+    const string _name;
+};
+
+struct timed : virtual public scope_base {
+    timed() {
+        _os << "Enter time: " << my_put_time();
+    }
+    ~timed() {
+        _os << "Exit time: " << my_put_time();
+    }
+};
+
+struct testsuite_scope : public named {
+    testsuite_scope(const string & n) : named(n) {
+        _os << name() << ": Setup started" << endl;
+    }
+    ~testsuite_scope() {
+        _os << name() << ": Tear-down "
+            << (good_exit() ? "complete" : "FAILED") << endl;
+    }
+};
+
+class testrun_scope : public timed {
+public:
+    testrun_scope(testsuite_scope & tbs) : _trs(tbs) {
+        _os << _trs.name() << ": Tests START" << endl;
+    }
+    ~testrun_scope() {
+        _os << _trs.name() << ": Tests FINISHED, tear-down follows" << endl;
+    }
+private:
+    testsuite_scope &_trs;
+};
+
+}
 
 /**
  * @brief Entry point for the test suite.
@@ -55,16 +118,14 @@ private:
 int main(int argc, char* argv[])
 {
     using namespace std;
-
-    string server_url{"matrix.org"};
-    string username_base{"@matrixx-user"};
+    using namespace scope_guard;
 
     if (argc > 2)
         cout << "Warning: extraneous arguments will be ignored." << endl;
-    if (argc > 0)
-        server_url = argv[0]; // FIXME: it assumes sane input atm
-    if (argc > 1)
-        username_base = argv[1]; // FIXME: same as above
+
+    // FIXME: assignments below assume sane input atm
+    const string server_url = (argc > 0) ? argv[0] : "matrix.org";
+    const string username_base = (argc > 1) ? argv[1] : "@matrixx-user";
 
     cout
         << "libmatrixx client testsuite" << endl
@@ -72,13 +133,26 @@ int main(int argc, char* argv[])
         << "  Server: " << server_url << endl
         << "  Username base: " << username_base << endl;
 
-    cout << "START at " << my_put_time() << endl;
-    // User story: exploring the server
-    // Login
-    // Get the list of rooms
-    // Get the list of users of each room
-    // Logout
+    const string main_user_name = username_base + ":" + server_url;
+    {
+        /* Set up */
+        testsuite_scope testsuite("ALL TESTS");
+        /* Tests */
+        {
+            testrun_scope _tss(testsuite);
+            using namespace mtrx::transport;
+            //ServerSession c(server_url, main_user_name);
+            //if (!c)
+            //    return RETVAL::NetworkFailure;
+            // User story: exploring the server
+            // Login
+            // Get the list of rooms
+            // Get the list of users of each room
+            // Logout
+        }
+        /* Tear down */
+        testsuite.good_exit();
+    }
 
-    cout << "FINISHED at " << my_put_time() << endl;
     return RETVAL::OK;
 }
