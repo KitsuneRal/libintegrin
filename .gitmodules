@@ -4,6 +4,3 @@
 [submodule "deps/boost/asio"]
 	path = deps/boost/asio
 	url = https://github.com/boostorg/asio.git
-[submodule "deps/kcoreaddons"]
-	path = deps/kcoreaddons
-	url = git://anongit.kde.org/kcoreaddons.git
