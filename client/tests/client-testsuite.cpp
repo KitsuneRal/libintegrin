@@ -15,8 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
-#include <iostream>
 #include <ctime>
 
 #include "client-common.h"
@@ -25,7 +23,8 @@
 #include <QCoreApplication>
 #include <QUrl>
 #include <QtDebug>
-#include "backends/libqmatrixclient/connection.h"
+
+#include "backends/backend-config.h"
 
 enum RETVAL : int {
     OK = 0,
@@ -35,67 +34,71 @@ enum RETVAL : int {
 
 /**
  * @brief Entry point for the test suite.
- * @param argv (all optional but should go in exactly this order):
- *      (1) server URL with port after colon (matrix.org by default)
- *      (2) test username base (@matrixx-user by default); up to 10 users in
- *          the form @matrixx-user01:matrix.org, @matrixx-user02:matrix.org, ...
- *          will be created (or reused if the server returns M_USER_IN_USE).
+ * @param argv (all optional but should go in exactly this order - see defaults
+ * in the code):
+ *      (1) server URL with port after colon
+ *      (2) the username of the main test user; (more users in
+ *          the form @main-test-username\d\d:matrix.org may be created/used in
+ *          the future, \d is a single digit.
  *          The common password for all will be "-+testUser+-" (without quotes)
- *      (3) test room name without the server part (#matrixx-testroom by default);
- *          it will be created as a private room or reused if it's already made.
+ *      (3) test room name without the server part. It will be created as
+ *          a private room or reused if it's already made.
  * @return One of RETVAL enum values, according to the outcome.
  */
 int main(int argc, char* argv[])
 {
     using namespace std;
     using namespace scope_guard;
+    using namespace mtrx::data;
+
+    /* Set up */
+    testsuite_scope testsuite("ALL TESTS");
+    QCoreApplication app(argc, argv);
 
     if (argc > 2)
         cout << "Warning: extraneous arguments will be ignored." << endl;
 
     // FIXME: assignments below assume sane input atm
-    const string server_url = (argc > 1) ? argv[1] : "http://matrix.org";
-    const string username_base = (argc > 2) ? argv[2] : "@matrixx-user";
-    const string main_user_pwd = "-+testUser+-";
+    const string_t server_url = (argc > 1) ? argv[1] : "http://matrix.org";
+    const string_t username_base = (argc > 2) ? argv[2] : "@test-matrixx-user";
+    const string_t main_user_name = username_base + ":" + server_url;
+    const string_t main_user_pwd = "-+testUser+-";
 
-    cout
+    debug_out()
         << "libmatrixx client testsuite" << endl
         << "Parameters: " << endl
         << "  Server: " << server_url << endl
-        << "  Username base: " << username_base << endl;
+        << "  Main username: " << main_user_name << endl;
 
-    const string main_user_name = username_base + ":" + server_url;
-
-    /* Set up */
-    testsuite_scope testsuite("ALL TESTS");
-    QCoreApplication app(argc, argv);
     int retval = RETVAL::TestsFailed;
-    const QString qserver = QString::fromStdString(server_url);
-    const QString qusername = QString::fromStdString(main_user_name);
-    const QString qpassword = QString::fromStdString(main_user_pwd);
     /* Tests */
     {
         testsuite_run_scope _tss(testsuite);
         using namespace mtrx::transport;
         using namespace QMatrixClient;
 
-        Connection c{QUrl(qserver)};
-        app.connect( &c, &QMatrixClient::Connection::connected,
-                     [&app]() {
-            qInfo("Connection succesful");
-            app.quit(); } );
-        app.connect( &c, &QMatrixClient::Connection::connectionError,
-                     [&app](QString error) {
-            qCritical() << "Connection failed:" << error;
-            app.exit(RETVAL::NetworkFailure);
-        } );
-        app.connect( &c, &QMatrixClient::Connection::loginError,
-                     [&app](QString error) {
-            qCritical() << "Login failed:" << error;
-            app.exit(RETVAL::TestsFailed);
-        } );
-        c.connectToServer(qusername, qpassword);
-        //ServerSession c(server_url, main_user_name);
+        Connection c{QUrl(server_url)};
+        app.connect( &c, &Connection::connected,
+            [&app]() {
+                qInfo("Connection succesful");
+                app.quit();
+            }
+        );
+        app.connect( &c, &Connection::connectionError,
+            [&app](QString error) {
+                qCritical() << "Connection failed:" << error;
+                app.exit(RETVAL::NetworkFailure);
+            }
+        );
+        app.connect( &c, &Connection::loginError,
+            [&app](QString error) {
+                qCritical() << "Login failed:" << error;
+                app.exit(RETVAL::TestsFailed);
+            }
+        );
+        c.connectToServer(main_user_name, main_user_pwd);
+        //Connection c(server_url);
+        //c.login(main_user_name, main_user_pwd);
         //if (!c)
         //    return RETVAL::NetworkFailure;
         // User story: exploring the server
