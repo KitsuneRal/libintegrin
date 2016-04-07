@@ -4,3 +4,6 @@
 [submodule "deps/boost/asio"]
 	path = deps/boost/asio
 	url = https://github.com/boostorg/asio.git
+[submodule "client/backends/libqmatrixclient"]
+	path = client/backends/libqmatrixclient
+	url = https://github.com/KitsuneRal/libqmatrixclient.git
