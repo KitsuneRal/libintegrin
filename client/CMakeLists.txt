@@ -14,7 +14,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #INCLUDE_DIRECTORIES(../deps/boost/asio/include)
 
 # Common stuff for the whole protocol
-INCLUDE_DIRECTORIES(../common)
+include_directories(../common)
 
 set(clientlib_SRCS
     client-common.cpp
@@ -52,7 +52,7 @@ if (BUILD_TESTS)
 
     # CS library tests
     set(client_testsuite_SRCS
-        client-testsuite.cpp
+        tests/client-testsuite.cpp
         )
 
     add_executable(client-testsuite ${client_testsuite_SRCS})
